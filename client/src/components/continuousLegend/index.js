@@ -2,7 +2,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import * as d3 from "d3";
-import { interpolateCool } from "d3-scale-chromatic";
+import { interpolateOrRd } from "d3-scale-chromatic";
 
 // create continuous color legend
 // http://bl.ocks.org/syntagmatic/e8ccca52559796be775553b467593a9f
@@ -123,7 +123,7 @@ class ContinuousLegend extends React.Component {
       if (range()[0][0] !== "#") {
         continuous(
           "#continuous_legend",
-          d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+          d3.scaleSequential(interpolateOrRd).domain(colorScale.domain()),
           colorAccessor
         );
       }

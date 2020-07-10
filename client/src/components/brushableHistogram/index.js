@@ -10,7 +10,7 @@ import { Button, ButtonGroup, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as d3 from "d3";
 import memoize from "memoize-one";
-import { interpolateCool } from "d3-scale-chromatic";
+import { interpolateOrRd } from "d3-scale-chromatic";
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { histogramContinuous } from "../../util/dataframe/histogram";
@@ -362,7 +362,7 @@ class HistogramBrush extends React.PureComponent {
       .attr("transform", `translate(${this.marginLeft},${this.marginTop})`);
 
     const colorScale = d3
-      .scaleSequential(interpolateCool)
+      .scaleSequential(interpolateOrRd)
       .domain([0, bins.length]);
 
     const histogramScale = d3
