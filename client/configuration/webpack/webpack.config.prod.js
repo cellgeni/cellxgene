@@ -16,7 +16,7 @@ const nodeModules = path.resolve("node_modules");
 
 const babelOptions = require("../babel/babel.prod");
 
-const publicPath = "/";
+const publicPath = "./";
 
 module.exports = {
   mode: "production",
@@ -78,7 +78,10 @@ module.exports = {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
         loader: "file-loader",
         include: [nodeModules, fonts],
-        query: { name: "static/assets/[name]-[contenthash].[ext]" },
+        options: {
+          publicPath: 'static',
+          name: "static/assets/[name]-[contenthash].[ext]" 
+        }
       },
     ],
   },
