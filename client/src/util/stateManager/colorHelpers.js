@@ -2,7 +2,7 @@
 Helper functions for the embedded graph colors
 */
 import * as d3 from "d3";
-import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
+import { interpolateRainbow, interpolateOrRd } from "d3-scale-chromatic";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import finiteExtent from "../finiteExtent";
@@ -108,7 +108,7 @@ function createColorsByContinuousMetadata(world, accessor) {
   /* pre-create colors - much faster than doing it for each obs */
   const colors = new Array(colorBins);
   for (let i = 0; i < colorBins; i += 1) {
-    colors[i] = parseRGB(interpolateCool(i / colorBins));
+    colors[i] = parseRGB(interpolateOrRd(i / colorBins));
   }
 
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
@@ -138,7 +138,7 @@ function createColorsByExpression(world, accessor) {
   /* pre-create colors - much faster than doing it for each obs */
   const colors = new Array(colorBins);
   for (let i = 0; i < colorBins; i += 1) {
-    colors[i] = parseRGB(interpolateCool(i / colorBins));
+    colors[i] = parseRGB(interpolateOrRd(i / colorBins));
   }
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
 

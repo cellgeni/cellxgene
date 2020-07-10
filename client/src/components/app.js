@@ -10,6 +10,7 @@ import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
+import AxisBar from "./axisbar";
 import Autosave from "./autosave";
 import TermsOfServicePrompt from "./termsPrompt";
 
@@ -77,6 +78,7 @@ class App extends React.Component {
                 <TermsOfServicePrompt />
                 <Legend viewportRef={viewportRef} />
                 <Graph key={graphRenderCounter} viewportRef={viewportRef} />
+                <AxisBar />
               </>
             )}
             <RightSideBar />
