@@ -110,7 +110,7 @@ function createColorsByContinuousMetadata(world, accessor) {
   for (let i = 0; i < colorBins; i += 1) {
     colors[i] = parseRGB(interpolateOrRd(i / colorBins));
   }
-
+  colors.reverse();
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
   const rgb = new Array(world.nObs);
   const data = col.asArray();
@@ -140,6 +140,7 @@ function createColorsByExpression(world, accessor) {
   for (let i = 0; i < colorBins; i += 1) {
     colors[i] = parseRGB(interpolateOrRd(i / colorBins));
   }
+  colors.reverse();
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
 
   const rgb = new Array(world.nObs);

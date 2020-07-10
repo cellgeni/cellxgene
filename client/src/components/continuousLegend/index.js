@@ -23,10 +23,10 @@ const continuous = (selectorId, colorscale, colorAccessor) => {
     .style("position", "absolute")
     .style("top", `${margin.top + 1}px`)
     .style("left", `${margin.left + 1}px`)
-    .style(
+    /*.style(
       "transform",
       "scale(1,-1)"
-    ) /* flip it! dark is high value light is low.
+    ) *//* flip it! dark is high value light is low.
     we flip the color scale as well [1, 0] instead of [0, 1] */
     .node();
 
@@ -36,8 +36,8 @@ const continuous = (selectorId, colorscale, colorAccessor) => {
     .scaleLinear()
     .range([1, legendheight - margin.top - margin.bottom])
     .domain([
-      colorscale.domain()[1],
       colorscale.domain()[0],
+      colorscale.domain()[1],
     ]); /* we flip this to make viridis colors dark if high in the color scale */
 
   // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5

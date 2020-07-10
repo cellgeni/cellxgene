@@ -35,6 +35,7 @@ RUN cd /cellxgene/build && \
     python3 setup.py sdist -d /dist && \
     pip3 install $(ls /dist/*.tar.gz)
 
-RUN rm -rf /cellxgene
+RUN rm -rf /cellxgene && \
+    apt-get purge -y --auto-remove nodejs
 
 # ENTRYPOINT ["cellxgene"]

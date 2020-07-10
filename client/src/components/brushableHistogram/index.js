@@ -369,8 +369,8 @@ class HistogramBrush extends React.PureComponent {
       .scaleLinear()
       .domain(x.domain())
       .range([
-        colorScale.domain()[1],
         colorScale.domain()[0],
+        colorScale.domain()[1],
       ]); /* we flip this to make colors dark if high in the color scale */
 
     if (binWidth > 0) {
