@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Button, ButtonGroup, Icon, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as d3 from "d3";
-import { interpolateCool } from "d3-scale-chromatic";
+import { interpolateRdPu } from "d3-scale-chromatic";
 import Async from "react-async";
 import memoize from "memoize-one";
 import { IconNames } from "@blueprintjs/icons";
@@ -304,7 +304,7 @@ const Histogram = ({
       .attr("transform", `translate(${marginLeft},${marginTop})`);
 
     const colorScale = d3
-      .scaleSequential(interpolateCool)
+      .scaleSequential(interpolateRdPu)
       .domain([0, bins.length]);
 
     const histogramScale = d3
