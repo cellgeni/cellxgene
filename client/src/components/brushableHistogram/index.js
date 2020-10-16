@@ -5,12 +5,13 @@ https://bl.ocks.org/SpaceActuary/2f004899ea1b2bd78d6f1dbb2febf771
 https://bl.ocks.org/mbostock/3019563
 */
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Button, ButtonGroup, Tooltip } from "@blueprintjs/core";
+import { Button, ButtonGroup, Icon, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as d3 from "d3";
 import { interpolateCool } from "d3-scale-chromatic";
 import Async from "react-async";
 import memoize from "memoize-one";
+import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { histogramContinuous } from "../../util/dataframe/histogram";
@@ -26,7 +27,7 @@ function maybeScientific(x) {
   const _ticks = x.ticks(4);
 
   if (x.domain().some((n) => Math.abs(n) >= 10000)) {
-    /* 
+    /*
       heuristic: if the last tick d3 wants to render has one significant
       digit ie., 2000, render 2e+3, but if it's anything else ie., 42000000 render
       4.20e+n
@@ -99,7 +100,7 @@ const HistogramFooter = React.memo(
     pvalAdj,
   }) => {
     /*
-  Footer of each histogram.  Will render range, title, and optionally 
+  Footer of each histogram.  Will render range, title, and optionally
   differential expression info.
 
   Required props:
@@ -214,10 +215,7 @@ const HistogramHeader = React.memo(
       >
         {onScatterPlotXClick && onScatterPlotYClick ? (
           <span>
-            <span
-              style={{ marginRight: 7 }}
-              className="bp3-icon-standard bp3-icon-scatter-plot"
-            />
+            <Icon icon={IconNames.SCATTER_PLOT} style={{ marginRight: 7 }} />
             <ButtonGroup style={{ marginRight: 7 }}>
               <Button
                 data-testid={`plot-x-${fieldId}`}
@@ -452,6 +450,7 @@ const Histogram = ({
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === field,
     continuousSelectionRange: state.continuousSelection[myName],
     isColorAccessor: state.colors.colorAccessor === field,
+    singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
   };
 })
 class HistogramBrush extends React.PureComponent {
@@ -610,18 +609,44 @@ class HistogramBrush extends React.PureComponent {
   };
 
   fetchAsyncProps = async () => {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, field, dispatch, singleContinuousValues } = this.props;
     const { isClipped } = annoMatrix;
-
+    if (singleContinuousValues.has(field)) {
+      return {
+        histogram: undefined,
+        range: undefined,
+        unclippedRange: undefined,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
     const query = this.createQuery();
     const df = await annoMatrix.fetch(...query);
     const column = df.icol(0);
 
-    // if we are clipped, fetch both our value and our unclipped value,
-    // as we need the absolute min/max range, not just the clipped min/max.
     const summary = column.summarize();
     const range = [summary.min, summary.max];
 
+    if (summary.min === summary.max && !isClipped) {
+      dispatch({
+        type: "add single continuous value",
+        field,
+        value: summary.min,
+      });
+      return {
+        histogram: undefined,
+        range,
+        unclippedRange: range,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
+
+    const isSingleValue = summary.min === summary.max;
+    // if we are clipped, fetch both our value and our unclipped value,
+    // as we need the absolute min/max range, not just the clipped min/max.
     let unclippedRange = [...range];
     if (isClipped) {
       const parent = await annoMatrix.viewOf.fetch(...query);
@@ -645,7 +670,6 @@ class HistogramBrush extends React.PureComponent {
       this.height
     );
 
-    const isSingleValue = summary.min === summary.max;
     const nonFiniteExtent =
       summary.min === undefined ||
       summary.max === undefined ||

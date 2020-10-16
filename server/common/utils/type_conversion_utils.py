@@ -9,8 +9,10 @@ def get_dtypes_and_schemas_of_dataframe(dataframe: pd.DataFrame):
     schema_type_hints_by_column_name = {}
 
     for column_name, column_values in dataframe.items():
-        dtypes_by_column_name[column_name], schema_type_hints_by_column_name[column_name] = \
-            get_dtype_and_schema_of_array(column_values)
+        (
+            dtypes_by_column_name[column_name],
+            schema_type_hints_by_column_name[column_name],
+        ) = get_dtype_and_schema_of_array(column_values)
 
     return dtypes_by_column_name, schema_type_hints_by_column_name
 
@@ -24,8 +26,10 @@ def get_schema_type_hint_of_array(array: pd.Series):
 
 
 def get_dtype_and_schema_of_array(array: pd.Series):
-    return (get_dtype_from_dtype(array.dtype, array_values=array),
-            get_schema_type_hint_from_dtype(array.dtype, array_values=array))
+    return (
+        get_dtype_from_dtype(array.dtype, array_values=array),
+        get_schema_type_hint_from_dtype(array.dtype, array_values=array),
+    )
 
 
 def get_dtype_from_dtype(dtype, array_values=None):
@@ -133,9 +137,11 @@ def can_cast_to_int32(dtype, array_values=None):
         if np.can_cast(dtype, np.int32):
             return True
         ii32 = np.iinfo(np.int32)
-        if not ordered_array_values.empty and (
-                ordered_array_values.min() >= ii32.min and ordered_array_values.max() <= ii32.max) or \
-                ordered_array_values.empty:
+        if (
+            not ordered_array_values.empty
+            and (ordered_array_values.min() >= ii32.min and ordered_array_values.max() <= ii32.max)
+            or ordered_array_values.empty
+        ):
             return True
     return False
 
@@ -145,3 +151,17 @@ def convert_pandas_series_to_numpy(series_to_convert: pd.Series, dtype):
         logging.error("Cannot convert a pandas Series object to an integer dtype if it contains NaNs.")
 
     return series_to_convert.to_numpy(dtype)
+
+
+def convert_string_to_value(value: str):
+    """convert a string to value with the most appropriate type"""
+    if value.lower() == "true":
+        return True
+    if value.lower() == "false":
+        return False
+    if value == "null":
+        return None
+    try:
+        return eval(value)
+    except:  # noqa E722
+        return value

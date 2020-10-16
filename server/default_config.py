@@ -14,6 +14,20 @@ server:
     server_timing_headers: false
     csp_directives: null
 
+    # By default, cellxgene will serve api requests from the same base url as the webpage.
+    # In general api_base_url and web_base_url will not need to be set.
+    # There are two reasons to set these parameters:
+    #  1. Oauth authentication is used; the oauth server will redirect back to the api_base_url after login,
+    #     which then redirects back to the web_base_url.  If the web_base_url is not set, it will default to
+    #     the api_base_url.  If oauth authentication is used, the api_base_url must be set.
+    #     For a local test (where the server runs on "http://localhost:<port>"), then the api_base_url may be
+    #     set to the string "local".
+    #  2. The cellxgene deploymnent is in an environment where the webpage and api have
+    #     different base urls.  In this case both api_base_url and web_base_url must be set.
+    #     It is up to the server admin to ensure that the networking is setup correctly for this environment.
+    api_base_url: null
+    web_base_url: null
+
   authentication:
     # The authentication types may be "none", "session", "oauth"
     # none:  No authentication support, features like user_annotations must not be enabled.
@@ -22,16 +36,17 @@ server:
     type: session
 
     params_oauth:
-       # url to the auth server
-       api_base_url: null
+       # url to the oauth server
+       oauth_api_base_url: null
        # client_id of this app
        client_id: null
        # the client_secret known to the auth server and this app
        client_secret: null
-       # cellxgene server location;
-       # the browser will be redirected to locations relative to this location during login and logout.
-       # A value of None, indicates the client and server are on the localhost.  http://localhost:<port> will be used.
-       callback_base_url: null
+       # jwt_decode_options, to specify non default decode options define
+       # jwt_decode_options to be a dictionary with key/values described by
+       # the options parameter of the jose.jwt.decode function:
+       # (https://python-jose.readthedocs.io/en/latest/jwt/api.html)
+       jwt_decode_options: null
 
        # if true, the jwt containing the id_token is stored in a session cookie
        session_cookie:  true
@@ -190,6 +205,60 @@ dataset:
     lfc_cutoff: 0.01
     top_n: 10
 
+external:
+  # You can retrieve configuration parameters from this config file, the environment,
+  # the AWS secrets manager, or from the "cellxgene launch" command line arguments.
+  # They are applied in that order, meaning that if a parameter is defined in more
+  # than one location, the last one applied takes effect.
+
+  # environment variables:
+  # This section describes how to map environment variables to configuration parameters.
+  # The format is a list defining an environment variable.
+  # Each entry in the list is a dictionary with three entries:
+  # name:  the name of the environment variable
+  # path: the path within the cellxgene configuration to update.
+  # required: (default=False) a boolean.  If true, then it is an error if the environment variable is not set.
+
+  environment:
+     - name: CXG_SECRET_KEY
+       path: [server, app, flask_secret_key]
+       required: false
+     - name: CXG_OAUTH_CLIENT_SECRET
+       path: [server, authentication, params_oauth, client_secret]
+       required: false
+
+  # AWS Secrets Manager
+  # This section describes how to map aws secrets to configuration parameters.
+  # The format is the region for the secrets manager, then a list of secrets.
+  # each secret has a name, and a list of values.
+  # Each entry in the list of values is a dictionary with three entries:
+  # key:  the key of the aws secret.
+  # path: the path within the cellxgene configuration to update.
+  # required: (default=False) a boolean.  If true, then it is an error if the key does not exist in the secret.
+  #
+  # example:
+  # aws_secrets_manager:
+  #   region: us-west-2
+  #    - name: my_first_secret
+  #      values:
+  #      - key: flask_secret_key
+  #        path: [server, app, flask_secret_key]
+  #        required: true
+  #      - key: db_uri
+  #        path: [dataset, user_annotations, hosted_tiledb_array, db_uri]
+  #        required: true
+  #    - name:  my_auth_secret
+  #      values:
+  #      - key: client_secret
+  #        path: [server, authentication, params_oauth, client_secret]
+  #        required: true
+  #      - key: client_id
+  #        path: [server, authentication, params_oauth, client_id]
+  #        required: true
+
+  aws_secrets_manager:
+    region: null
+    secrets: []
 """
 
 

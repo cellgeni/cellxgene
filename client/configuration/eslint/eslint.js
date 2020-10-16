@@ -4,6 +4,7 @@ module.exports = {
   extends: [
     "airbnb",
     "plugin:eslint-comments/recommended",
+    "plugin:@blueprintjs/recommended",
     "plugin:compat/recommended",
     "plugin:prettier/recommended",
     "prettier/react",
@@ -39,6 +40,7 @@ module.exports = {
     },
   },
   rules: {
+    "react/jsx-no-target-blank": "off",
     "eslint-comments/require-description": ["error"],
     "no-magic-numbers": "off",
     "no-nested-ternary": "off",
