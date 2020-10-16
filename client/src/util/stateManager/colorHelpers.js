@@ -172,7 +172,7 @@ function _createColorsByContinuousMetadata(data, min, max) {
   for (let i = 0; i < colorBins; i += 1) {
     colors[i] = parseRGB(interpolateRdPu(i / colorBins));
   }
-
+  colors.reverse();
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
   const rgb = new Array(data.length);
   for (let i = 0, len = data.length; i < len; i += 1) {

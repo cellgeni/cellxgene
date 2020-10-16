@@ -310,10 +310,7 @@ const Histogram = ({
     const histogramScale = d3
       .scaleLinear()
       .domain(x.domain())
-      .range([
-        colorScale.domain()[1],
-        colorScale.domain()[0],
-      ]); /* we flip this to make colors dark if high in the color scale */
+      .range([colorScale.domain()[0], colorScale.domain()[1]]);
 
     if (binWidth > 0) {
       /* BINS */
