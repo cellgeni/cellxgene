@@ -181,24 +181,31 @@ def rest_get_data_adaptor(func):
 
 def dataroot_test_index():
     # the following index page is meant for testing/debugging purposes
-    data = '<!doctype html><html lang="en">'
-    data += "<head><title>Hosted Cellxgene</title></head>"
-    data += "<body><H1>Welcome to cellxgene</H1>"
+    data = """
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
+    <title>Bayraktar cellxgene portal</title>
+
+  </head>
+  <body>
+"""
+
 
     config = current_app.app_config
     server_config = config.server_config
-
-    auth = server_config.auth
-    if auth.is_valid_authentication_type():
-        if server_config.auth.is_user_authenticated():
-            data += f"<p>Logged in as {auth.get_user_id()} / {auth.get_user_name()} / {auth.get_user_email()}</p>"
-        if auth.requires_client_login():
-            if server_config.auth.is_user_authenticated():
-                data += f"<p><a href='{auth.get_logout_url(None)}'>Logout</a></p>"
-            else:
-                data += f"<p><a href='{auth.get_login_url(None)}'>Login</a></p>"
+    
+    data += '<h2 class="display-2 text-center">Bayraktar cellxgene portal</h2>'
 
     datasets = []
+    data_of_datasets = []
     for dataroot_dict in server_config.multi_dataset__dataroot.values():
         dataroot = dataroot_dict["dataroot"]
         url_dataroot = dataroot_dict["base_url"]
@@ -207,20 +214,46 @@ def dataroot_test_index():
             location = path_join(dataroot, fname)
             try:
                 MatrixDataLoader(location, app_config=config)
-                datasets.append((url_dataroot, fname))
+                size, mtime = size_time_fmt(location)
+                datasets.append((url_dataroot, fname, size, mtime))
             except DatasetAccessError:
                 # skip over invalid datasets
                 pass
 
-    data += "<br/>Select one of these datasets...<br/>"
-    data += "<ul>"
+    data += '<h4  class="display-4 text-center">Datasets</h4>'
+    data += '<div class="container"><div class="row"><div class="col-md-12">'
+    data += '<ul  class="list-group">'
     datasets.sort()
-    for url_dataroot, dataset in datasets:
-        data += f"<li><a href={url_dataroot}/{dataset}>{dataset}</a></li>"
+    for url_dataroot, dataset, size, mtime in datasets:
+        data += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+        data += f'<a href={url_dataroot}/{dataset}>{dataset}</a>'
+        data += f'<div><span class="badge badge-primary badge-pill">{size}</span>'
+        data += f'<span class="badge badge-secondary badge-pill">{mtime}</span></div>'
+        data += '</li>'
     data += "</ul>"
-    data += "</body></html>"
+    data += '</div></div></div>'
+
+    data += """
+<!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+  </body>
+</html>
+"""
 
     return make_response(data)
+
+def size_time_fmt(path):
+    import math
+    from pathlib import Path
+    stat = Path(path).stat()
+    mtime = stat.st_mtime
+    time_fmt = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d-%H:%M')
+    suffix='B'
+    magnitude = int(math.floor(math.log(stat.st_size, 1024)))
+    val = stat.st_size/math.pow(1024, magnitude)
+    size_fmt = '{:3.1f}{}'.format(val, ['B', 'KB', 'MB', 'GB'][min(3,magnitude)])
+    return size_fmt, time_fmt
 
 
 def dataroot_index():
