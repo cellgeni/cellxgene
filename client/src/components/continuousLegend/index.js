@@ -2,7 +2,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import * as d3 from "d3";
-import { interpolateCool } from "d3-scale-chromatic";
+import { interpolateOrRd } from "d3-scale-chromatic";
 
 import {
   createColorTable,
@@ -28,11 +28,11 @@ const continuous = (selectorId, colorScale, colorAccessor) => {
     .style("position", "absolute")
     .style("top", `${margin.top + 1}px`)
     .style("left", `${margin.left + 1}px`)
-    .style(
-      "transform",
-      "scale(1,-1)"
-    ) /* flip it! dark is high value light is low.
-    we flip the color scale as well [1, 0] instead of [0, 1] */
+    //.style(
+    //  "transform",
+    //  "scale(1,-1)"
+    //) /* flip it! dark is high value light is low.
+    //we flip the color scale as well [1, 0] instead of [0, 1] */
     .node();
 
   const ctx = canvas.getContext("2d");
@@ -139,7 +139,7 @@ class ContinuousLegend extends React.Component {
         if (range()[0][0] !== "#") {
           continuous(
             "#continuous_legend",
-            d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+            d3.scaleSequential(interpolateOrRd).domain(colorScale.domain()),
             colorAccessor
           );
         }

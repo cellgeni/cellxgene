@@ -7,6 +7,7 @@ import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
+import AxisBar from "./axisbar";
 import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
@@ -79,6 +80,7 @@ class App extends React.Component {
                 <TermsOfServicePrompt />
                 <Legend viewportRef={viewportRef} />
                 <Graph key={graphRenderCounter} viewportRef={viewportRef} />
+                <AxisBar />
               </>
             )}
             <RightSideBar />
