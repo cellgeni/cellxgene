@@ -13,13 +13,11 @@ RUN wget --quiet https://deb.nodesource.com/setup_14.x && chmod +x setup_14.x &&
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-#RUN git clone --single-branch --branch limb-dev https://github.com/cellgeni/cellxgene.git && \
-COPY ./ /cellxgene/
-
-RUN cd /cellxgene && \
+RUN git clone --single-branch --branch limb-dev https://github.com/cellgeni/cellxgene.git && \
+    cd cellxgene && \
     make build-for-server-dev
 
-RUN cd /cellxgene && \
+RUN cd cellxgene && \
     python3 -m pip install --upgrade pip && \
     pip3 install --upgrade six && \
     pip3 install -e .
