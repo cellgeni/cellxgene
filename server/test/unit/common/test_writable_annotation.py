@@ -2,7 +2,7 @@ import json
 import shutil
 import unittest
 from os import path, listdir
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -129,20 +129,34 @@ class WritableTileDBStoredAnnotationTest(unittest.TestCase):
             with self.assertRaises(KeyError):
                 self.annotation_put_fbs(fbs_bad)
 
-    @patch("server.common.annotations.hosted_tiledb.AnnotationsHostedTileDB.get_user_id")
-    @patch("server.common.annotations.hosted_tiledb.AnnotationsHostedTileDB.get_user_name")
-    def test_write_labels_stores_df_as_tiledb_array(self, mock_user_name, mock_user_id):
-        mock_user_id.return_value = "1234"
-        mock_user_name.return_value = "user1234"
-        self.annotations.write_labels(self.df, self.data)
-        # get uri
-        dataset_id = self.db.query([CellxGeneDataset], [CellxGeneDataset.name == self.data.get_location()])[0].id
-        annotation = self.db.query_for_most_recent(
-            Annotation, [Annotation.user_id == "1234", Annotation.dataset_id == str(dataset_id)]
-        )
+    def test_write_labels_stores_df_as_tiledb_array(self):
+        with self.app.test_request_context():
+            self.annotations.write_labels(self.df, self.data)
+            # get uri
+            dataset_id = self.db.query([CellxGeneDataset], [CellxGeneDataset.name == self.data.get_location()])[0].id
+            annotation = self.db.query_for_most_recent(
+                Annotation, [Annotation.user_id == "1234", Annotation.dataset_id == str(dataset_id)]
+            )
 
-        df = tiledb.open(annotation.tiledb_uri)
-        self.assertEqual(type(df), tiledb.array.SparseArray)
+            df = tiledb.open(annotation.tiledb_uri)
+            self.assertEqual(type(df), tiledb.array.SparseArray)
+
+    def test_remove_categories(self):
+        with self.app.test_request_context():
+            # update empty category data, which is how annotations are removed
+            empty = make_fbs({})
+            self.annotation_put_fbs(empty)
+
+            # verify that the tiledb uri is an empty string.
+            dataset_id = self.db.query([CellxGeneDataset], [CellxGeneDataset.name == self.data.get_location()])[0].id
+            annotation = self.db.query_for_most_recent(
+                Annotation, [Annotation.user_id == self.user_id, Annotation.dataset_id == str(dataset_id)]
+            )
+            self.assertEqual(annotation.tiledb_uri, "")
+
+            # verify that read_labels returns None
+            df = self.annotations.read_labels(self.data)
+            self.assertIsNone(df)
 
 
 class WritableAnnotationTest(unittest.TestCase):
@@ -269,4 +283,33 @@ class WritableAnnotationTest(unittest.TestCase):
         self.assertEqual(
             all_col_schema["cat_B"],
             {"name": "cat_B", "type": "categorical", "categories": ["label_B"], "writable": True},
+        )
+
+    def test_put_float_data(self):
+        # verify that OBS PUTs (annotation_put_fbs) are accessible via
+        # GET (annotation_to_fbs_matrix)
+
+        n_rows = self.data.get_shape()[0]
+
+        # verifies that floating point with decimals fail.
+        fbs = make_fbs({"cat_F_FAIL": pd.Series([1.1] * n_rows, dtype=np.dtype("float"))})
+        with self.assertRaises(ValueError) as exception_context:
+            res = self.annotation_put_fbs(fbs)
+        self.assertEqual(str(exception_context.exception), "Columns may not have floating point types")
+
+        # verifies that floating point that can be converted to int passes
+        fbs = make_fbs({"cat_F_PASS": pd.Series([1.0] * n_rows, dtype="float")})
+        res = self.annotation_put_fbs(fbs)
+        self.assertEqual(res, json.dumps({"status": "OK"}))
+
+        # check read_labels
+        labels = self.annotations.read_labels(None)
+        fbsAll = self.data.annotation_to_fbs_matrix("obs", None, labels)
+        schema = schema_get_helper(self.data)
+        annotations = decode_fbs.decode_matrix_FBS(fbsAll)
+        self.assertEqual(annotations["n_rows"], n_rows)
+        all_col_schema = {c["name"]: c for c in schema["annotations"]["obs"]["columns"]}
+        self.assertEqual(
+            all_col_schema["cat_F_PASS"],
+            {"name": "cat_F_PASS", "type": "int32", "writable": True},
         )
